@@ -1,30 +1,21 @@
 import hashlib
-import uuid
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.models.document import Document
-from app.db.models.document_chunk import DocumentChunk
-from app.repositories.chunk_repository import ChunkRepository
 from app.repositories.document_repository import DocumentRepository
-from app.services.chunker_service import DocumentChunkerService
-from app.services.parser_service import DocumentParserService
 from app.services.storage_service import LocalStorageService
 
 
 class DocumentService:
-    """Business logic for document ingestion."""
+    """Business logic for document lifecycle and persistence."""
 
     def __init__(self, db: Session):
         self.db = db
 
         self.document_repository = DocumentRepository(db)
-        self.chunk_repository = ChunkRepository(db)
 
         self.storage = LocalStorageService()
-        self.parser = DocumentParserService()
-        self.chunker = DocumentChunkerService()
 
     def ingest_document(
         self,
@@ -69,50 +60,13 @@ class DocumentService:
                 file_size=len(file_content),
                 storage_path=storage_path,
                 checksum=checksum,
-                status="PROCESSING",
+                status="READY",
                 version=1,
             )
 
             self.document_repository.create(
                 document
             )
-
-            # 3. Parse
-            text = self.parser.parse(
-                file_content=file_content,
-                filename=filename,
-            )
-
-            if not text.strip():
-                raise ValueError(
-                    "No text could be extracted from the document."
-                )
-
-            # 4. Chunk
-            chunks = self.chunker.chunk(text)
-
-            if not chunks:
-                raise ValueError(
-                    "Document produced no chunks."
-                )
-
-            # 5. Persist chunks
-            chunk_models = [
-                DocumentChunk(
-                    document_id=document.id,
-                    chunk_index=index,
-                    content=chunk,
-                    token_count=None,
-                )
-                for index, chunk in enumerate(chunks)
-            ]
-
-            self.chunk_repository.create_many(
-                chunk_models
-            )
-
-            # 6. Mark document ready
-            document.status = "READY"
 
             self.db.commit()
             self.db.refresh(document)

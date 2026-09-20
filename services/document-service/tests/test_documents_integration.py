@@ -1,10 +1,9 @@
 import uuid
-from io import BytesIO
 
-from docx import Document as DocxDocument
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.core.config import settings
 
 
 client = TestClient(app)
@@ -16,22 +15,14 @@ DOCX_CONTENT_TYPE = (
 )
 
 
-def create_test_docx(content: str) -> bytes:
-    buffer = BytesIO()
-
-    document = DocxDocument()
-
-    document.add_paragraph(content)
-
-    document.save(buffer)
-
-    return buffer.getvalue()
+def create_test_file(content: str) -> bytes:
+    return content.encode("utf-8")
 
 
 def test_document_upload():
     unique_id = uuid.uuid4()
 
-    file_content = create_test_docx(
+    file_content = create_test_file(
         f"EKA integration test document {unique_id}"
     )
 
@@ -59,7 +50,7 @@ def test_document_upload():
 def test_duplicate_document_upload():
     unique_id = uuid.uuid4()
 
-    file_content = create_test_docx(
+    file_content = create_test_file(
         f"EKA duplicate detection test {unique_id}"
     )
 
@@ -92,6 +83,27 @@ def test_duplicate_document_upload():
     assert (
         second_response.json()["detail"]
         == "A document with this content already exists."
+    )
+
+
+def test_document_upload_rejects_oversized_file():
+    file_content = b"x" * (settings.max_file_size_mb * 1024 * 1024 + 1)
+
+    response = client.post(
+        "/documents/upload",
+        files={
+            "file": (
+                "oversized-document.pdf",
+                file_content,
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json()["detail"] == (
+        f"File size exceeds the maximum allowed size of "
+        f"{settings.max_file_size_mb} MB."
     )
 
 

@@ -7,6 +7,7 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.database import get_db
 from app.schemas.document import DocumentResponse
 from app.services.document_service import DocumentService
@@ -45,6 +46,17 @@ async def upload_document(
         )
 
     file_content = await file.read()
+
+    max_file_size = settings.max_file_size_mb * 1024 * 1024
+
+    if len(file_content) > max_file_size:
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                f"File size exceeds the maximum allowed size of "
+                f"{settings.max_file_size_mb} MB."
+            ),
+        )
 
     service = DocumentService(db)
 
