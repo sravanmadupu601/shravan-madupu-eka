@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     document_storage_path: str = "../document-service/storage/documents"
     chunk_size: int = 1000
     chunk_overlap: int = 200
+    chunking_strategy: str = "fixed"
+    semantic_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    semantic_similarity_threshold: float = 0.70
+    semantic_min_sentences: int = 1
+    semantic_max_sentences: int = 20
+    embedding_device: str = "cpu"
     processing_version: str = "1.0"
 
     model_config = SettingsConfigDict(
