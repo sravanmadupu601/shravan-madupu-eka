@@ -9,6 +9,15 @@ class Settings(BaseSettings):
     embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_model_version: str = "1"
     embedding_dimension: int = 384
+    vector_dimension: int | None = None
+    vector_distance_metric: str = "cosine"
+
+    @property
+    def configured_vector_dimension(self) -> int:
+        dimension = self.vector_dimension or self.embedding_dimension
+        if dimension != self.embedding_dimension:
+            raise ValueError("VECTOR_DIMENSION must match EMBEDDING_DIMENSION.")
+        return dimension
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -45,3 +45,24 @@ def test_duplicate_chunk_ids_are_rejected(client):
         },
     )
     assert response.status_code == 422
+
+
+def test_similarity_search_endpoint(client):
+    document_id = uuid.uuid4()
+    chunk_id = uuid.uuid4()
+    created = client.post(
+        "/embeddings",
+        json={
+            "document_id": str(document_id),
+            "chunks": [{"chunk_id": str(chunk_id), "text": "hello"}],
+        },
+    )
+    assert created.status_code == 200
+
+    response = client.post(
+        "/embeddings/search",
+        json={"query_embedding": [1.0, 2.0, 3.0], "top_k": 1, "similarity_threshold": 0.99},
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["chunk_id"] == str(chunk_id)
