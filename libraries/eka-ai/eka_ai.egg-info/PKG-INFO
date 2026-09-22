@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: eka-ai
+Version: 0.1.0
+Summary: EKA-owned AI capability interfaces
+Requires-Python: >=3.12
