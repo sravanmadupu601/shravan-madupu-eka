@@ -18,12 +18,13 @@ def test_service_specs_use_expected_ports_and_directories():
     root = Path("/tmp/eka-root")
     specs = service_specs(root)
 
-    assert [spec.name for spec in specs] == ["document", "ingestion", "embedding"]
-    assert [spec.port for spec in specs] == [8000, 8001, 8002]
+    assert [spec.name for spec in specs] == ["document", "ingestion", "embedding", "rag"]
+    assert [spec.port for spec in specs] == [8000, 8001, 8002, 8003]
     assert [str(spec.directory) for spec in specs] == [
         str(root / "services" / "document-service"),
         str(root / "services" / "ingestion-service"),
         str(root / "services" / "embedding-service"),
+        str(root / "services" / "rag-service"),
     ]
 
 

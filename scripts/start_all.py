@@ -34,6 +34,7 @@ def service_specs(repo: Path | None = None) -> list[ServiceSpec]:
         ServiceSpec("document", root / "services" / "document-service", 8000),
         ServiceSpec("ingestion", root / "services" / "ingestion-service", 8001),
         ServiceSpec("embedding", root / "services" / "embedding-service", 8002),
+        ServiceSpec("rag", root / "services" / "rag-service", 8003),
     ]
 
 
@@ -165,6 +166,7 @@ def main() -> int:
             process = start_service(spec)
         except FileNotFoundError as exc:
             print(f"[{spec.name.upper()}] ERROR: {exc}")
+            shutdown_processes(processes)
             return 1
         except RuntimeError as exc:
             print(f"[{spec.name.upper()}] ERROR: {exc}")
@@ -185,9 +187,11 @@ def main() -> int:
     print()
     print("EKA services are running.")
     print()
-    print("Document  : http://127.0.0.1:8000")
+    print("Document : http://127.0.0.1:8000")
     print("Ingestion : http://127.0.0.1:8001")
     print("Embedding : http://127.0.0.1:8002")
+    print("RAG : http://127.0.0.1:8003")
+    print("RAG Docs : http://127.0.0.1:8003/docs")
     print()
     print("Press Ctrl+C to stop all services.")
 
