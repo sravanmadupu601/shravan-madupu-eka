@@ -11,6 +11,8 @@ from app.repositories.ingestion_repository import IngestionRepository
 from app.services.chunker_service import DocumentChunker, TextChunk
 from app.services.parser_service import ParserFactory
 from app.services.storage_service import SharedDocumentStorage
+from app.infrastructure.chunking.semantic_chunker import SemanticChunker
+from app.infrastructure.chunking.semantic_embedding_provider import HuggingFaceSemanticEmbeddingProvider
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,23 @@ class IngestionService:
         self.db = db
         self.storage = SharedDocumentStorage(settings.document_storage_path)
         self.parser_factory = ParserFactory()
-        self.chunker = DocumentChunker(settings.chunk_size, settings.chunk_overlap)
+        self.chunker = self._build_chunker()
+
+    @staticmethod
+    def _build_chunker():
+        if settings.chunking_strategy == "fixed":
+            return DocumentChunker(settings.chunk_size, settings.chunk_overlap)
+        if settings.chunking_strategy == "semantic":
+            return SemanticChunker(
+                HuggingFaceSemanticEmbeddingProvider(
+                    settings.semantic_model_name,
+                    settings.embedding_device,
+                ),
+                settings.semantic_similarity_threshold,
+                settings.semantic_min_sentences,
+                settings.semantic_max_sentences,
+            )
+        raise ValueError("CHUNKING_STRATEGY must be either 'fixed' or 'semantic'.")
 
     def ingest(self, document_id: UUID) -> IngestionRun:
         existing = self.repository.get_run(str(document_id), settings.processing_version)
@@ -134,5 +152,9 @@ class IngestionService:
             page_number=chunk.page_number,
             source_filename=filename,
             content_type=content_type,
-            metadata_json={"processing_version": settings.processing_version},
+            metadata_json={
+                "processing_version": settings.processing_version,
+                "chunking_strategy": chunk.chunking_strategy,
+                "sentence_count": chunk.sentence_count,
+            },
         )

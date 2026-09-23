@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import re
+from typing import Protocol
 
 
 @dataclass(frozen=True)
@@ -7,6 +9,17 @@ class TextChunk:
     character_count: int
     token_count: int
     page_number: int | None = None
+    sentence_count: int | None = None
+    chunking_strategy: str = "fixed"
+
+
+class Chunker(Protocol):
+    def chunk(
+        self,
+        text: str,
+        page_text: list[tuple[int | None, str]] | None = None,
+    ) -> list[TextChunk]:
+        ...
 
 
 class DocumentChunker:
@@ -32,6 +45,8 @@ class DocumentChunker:
                             character_count=chunk.character_count,
                             token_count=chunk.token_count,
                             page_number=page_number,
+                            sentence_count=chunk.sentence_count,
+                            chunking_strategy=chunk.chunking_strategy,
                         )
                     )
             return chunks
@@ -51,9 +66,15 @@ class DocumentChunker:
                         content=content,
                         character_count=len(content),
                         token_count=len(content.split()),
+                        sentence_count=self._sentence_count(content),
+                        chunking_strategy="fixed",
                     )
                 )
             if end >= len(text):
                 break
             start = max(end - self.chunk_overlap, start + 1)
         return chunks
+
+    @staticmethod
+    def _sentence_count(content: str) -> int:
+        return max(1, len(re.findall(r"[^.!?]+(?:[.!?]+|$)", content)))
