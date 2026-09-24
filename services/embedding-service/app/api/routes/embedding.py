@@ -1,12 +1,32 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 
 from app.api.dependencies import get_embedding_service
 from app.application.services.embedding_service import EmbeddingApplicationService
 from app.schemas import EmbeddingItem, EmbeddingMetadataResponse, EmbeddingRequest, EmbeddingResponse
 
 router = APIRouter(prefix="/embeddings", tags=["Embeddings"])
+
+
+class EmbeddingSearchRequest(BaseModel):
+    query_embedding: list[float] = Field(min_length=1)
+    top_k: int = Field(default=5, ge=1, le=100)
+    similarity_threshold: float | None = Field(default=None, ge=-1, le=1)
+    document_id: UUID | None = None
+    model_name: str | None = None
+    model_version: str | None = None
+
+
+class EmbeddingSearchItem(BaseModel):
+    document_id: UUID
+    chunk_id: UUID
+    model_name: str
+    model_version: str
+    dimension: int
+    distance: float
+    similarity: float
 
 
 def _item(embedding) -> EmbeddingItem:
@@ -53,3 +73,36 @@ def get_embeddings(
         embeddings=[_item(embedding) for embedding in embeddings],
         count=len(embeddings),
     )
+
+
+@router.post("/search", response_model=list[EmbeddingSearchItem])
+def search_embeddings(
+    request: EmbeddingSearchRequest,
+    service: EmbeddingApplicationService = Depends(get_embedding_service),
+):
+    results = service.search_similar(
+        request.query_embedding,
+        request.top_k,
+        request.similarity_threshold,
+        {
+            key: value
+            for key, value in {
+                "document_id": str(request.document_id) if request.document_id else None,
+                "model_name": request.model_name,
+                "model_version": request.model_version,
+            }.items()
+            if value is not None
+        },
+    )
+    return [
+        EmbeddingSearchItem(
+            document_id=result.embedding.document_id,
+            chunk_id=result.embedding.chunk_id,
+            model_name=result.embedding.model_name,
+            model_version=result.embedding.model_version,
+            dimension=result.embedding.dimension,
+            distance=result.distance,
+            similarity=result.similarity,
+        )
+        for result in results
+    ]

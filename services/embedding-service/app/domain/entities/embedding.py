@@ -14,3 +14,10 @@ class Embedding:
     dimension: int
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+
+@dataclass(frozen=True)
+class EmbeddingSearchResult:
+    embedding: Embedding
+    distance: float
+    similarity: float

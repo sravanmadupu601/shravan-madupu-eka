@@ -35,6 +35,7 @@ def service_specs(repo: Path | None = None) -> list[ServiceSpec]:
         ServiceSpec("ingestion", root / "services" / "ingestion-service", 8001),
         ServiceSpec("embedding", root / "services" / "embedding-service", 8002),
         ServiceSpec("rag", root / "services" / "rag-service", 8003),
+        ServiceSpec("agent", root / "services" / "agent-service", 8004),
     ]
 
 
@@ -190,8 +191,12 @@ def main() -> int:
     print("Document : http://127.0.0.1:8000")
     print("Ingestion : http://127.0.0.1:8001")
     print("Embedding : http://127.0.0.1:8002")
+<<<<<<< HEAD
     print("RAG : http://127.0.0.1:8003")
     print("RAG Docs : http://127.0.0.1:8003/docs")
+=======
+    print("Agent     : http://127.0.0.1:8004")
+>>>>>>> 66bc4670a8a4d8cfce9f265229b4c468999a2711
     print()
     print("Press Ctrl+C to stop all services.")
 

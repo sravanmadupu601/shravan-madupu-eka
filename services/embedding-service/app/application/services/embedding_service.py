@@ -81,3 +81,14 @@ class EmbeddingApplicationService:
 
     def list_document_embeddings(self, document_id: UUID) -> list[Embedding]:
         return self.repository.list_by_document(document_id)
+
+    def search_similar(
+        self,
+        query_embedding: list[float],
+        top_k: int,
+        similarity_threshold: float | None = None,
+        filters: dict[str, str] | None = None,
+    ):
+        if len(query_embedding) != self.provider.get_dimension():
+            raise EmbeddingDimensionError("Query embedding has an unexpected dimension.")
+        return self.repository.search_similar(query_embedding, top_k, similarity_threshold, filters)
