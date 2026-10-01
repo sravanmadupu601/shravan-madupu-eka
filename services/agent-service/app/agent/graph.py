@@ -18,6 +18,7 @@ def build_agent_graph(
     max_retries: int = 2,
 ):
     provider = llm_provider or MockLLMProvider()
+    max_retries = min(max(0, max_retries), 2)
 
     def analyze_node(state: AgentState) -> dict:
         from app.application.analyzer import analyze_request

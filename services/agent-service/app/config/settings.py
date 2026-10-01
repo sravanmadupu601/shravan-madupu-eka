@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     agent_service_port: int = 8004
     rag_service_url: str = "http://127.0.0.1:8003"
     document_service_url: str = "http://127.0.0.1:8000"
-    max_agent_retries: int = 2
+    max_agent_retries: int = Field(default=2, ge=0, le=2)
     llm_provider: str = "mock"
 
     @field_validator("rag_service_url", "document_service_url")

@@ -1,6 +1,7 @@
 import pytest
 
 from app.application.agent_service import AgentService
+from app.application.analyzer import analyze_request
 from app.agent.graph import build_agent_graph
 from app.domain.models import AgentRequest, Intent, KnowledgeResult
 from app.tools.rag_tool import RagUnavailableError
@@ -15,6 +16,22 @@ def service(rag=None, business=None, llm=None, retries=2):
         max_retries=retries,
     )
     return AgentService(runner=graph, max_retries=retries)
+
+
+@pytest.mark.parametrize(
+    ("query", "intent"),
+    [
+        ("What is our cancellation policy?", Intent.KNOWLEDGE),
+        ("Can reservation ABC123 be cancelled?", Intent.BUSINESS_DATA),
+        (
+            "What is the cancellation policy and can ABC123 be cancelled?",
+            Intent.KNOWLEDGE_AND_BUSINESS_DATA,
+        ),
+        ("What is the capital of France?", Intent.GENERAL),
+    ],
+)
+def test_analyzer_routes_documented_intent_examples(query, intent):
+    assert analyze_request(query).intent == intent
 
 
 def test_knowledge_only_request_propagates_citations(knowledge_result):
@@ -95,6 +112,16 @@ def test_retry_limit_is_bounded_and_no_citation_is_invented():
     assert len(rag.queries) == 3
     assert result.validation_status == "INSUFFICIENT"
     assert result.citations == []
+
+
+def test_retry_limit_is_capped_at_two():
+    rag = StubRagClient([KnowledgeResult(), KnowledgeResult(), KnowledgeResult(), KnowledgeResult()])
+    result = service(rag=rag, retries=10).query(
+        AgentRequest(query="What is the cancellation policy?")
+    )
+
+    assert result.retry_count == 2
+    assert len(rag.queries) == 3
 
 
 def test_validation_failure_without_rag_retry_for_missing_reservation():

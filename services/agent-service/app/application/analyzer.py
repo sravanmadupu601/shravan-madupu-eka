@@ -13,7 +13,7 @@ _BUSINESS_TERMS = re.compile(
 )
 _KNOWLEDGE_TERMS = re.compile(
     r"\b(policy|policies|cancellation|cancel(?:lation)?|refund|penalty|deadline|"
-    r"procedure|guideline|rules?|terms|eligib(?:le|ility)|how does|what is|explain)\b",
+    r"procedure|guideline|rules?|terms|eligib(?:le|ility)|process|requirements?|explain)\b",
     re.IGNORECASE,
 )
 

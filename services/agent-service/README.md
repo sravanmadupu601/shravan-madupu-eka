@@ -39,8 +39,8 @@ Intent analysis is a replaceable deterministic heuristic, not an ML classifier o
 
 ## Tools and integrations
 
-- **Knowledge:** `RagClient` is the boundary for Block 4. No Block 4 implementation source is present in the workspace. A local service already responding on port 8003 published OpenAPI for `POST /rag/query` (`question` request; `answer`, `citations`, and `retrieved_chunks` response) plus `GET /health/ready`. `HttpRagClient` implements that observed contract. Its source implementation and local-only model/provider behavior cannot be audited from this checkout; the client calls only the configured local URL. Unit tests exercise the mapping with an in-memory HTTP transport, and graph tests inject a fake client.
-- **Documents:** `DocumentClient` is an interface with a local unavailable stub. Block 1 currently exposes upload and health only, not document retrieval/search.
+- **Knowledge:** `RagClient` is the boundary for Block 4. `HttpRagClient` calls the implemented local `POST /rag/query` contract (`question` request; `answer`, `citations`, and `retrieved_chunks` response) and uses `GET /health/ready` for readiness. Unit tests exercise request/response mapping with an in-memory HTTP transport; graph tests inject a fake client.
+- **Documents:** `DocumentClient` is an interface with an explicit unavailable local adapter. Block 1 currently exposes upload and health/readiness only, not document retrieval/search, so Block 5 does not invent or call a nonexistent metadata/content endpoint.
 - **Business data:** `LocalMockBusinessDataClient` is a read-only demonstration adapter with a single sample reservation (`ABC123`). Its returned data is labeled `LOCAL MOCK DATA`; it is not live enterprise or Marriott data. Replace the adapter behind the port when a real local business API exists.
 - **Calculator:** omitted; current intents do not require arithmetic/date calculations.
 - **MCP:** not implemented. The ports can later be adapted to Block 6 MCP tools.
@@ -83,7 +83,7 @@ Copy-Item .env.example .env
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8004
 ```
 
-The root `scripts/start-all.py` includes this service and resolves its own `.venv`. The root launcher currently starts Document (8000), Ingestion (8001), Embedding (8002), and Agent (8004). It does not start RAG on 8003 because no runnable RAG application source is present in the repository, even though a local process currently publishes that API.
+The root `scripts/start-all.py` includes this service and resolves its own `.venv`. The current root launcher starts Document (8000), Ingestion (8001), Embedding (8002), RAG (8003), and Agent (8004).
 
 ## Tests
 
