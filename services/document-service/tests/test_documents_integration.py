@@ -1,10 +1,9 @@
 import uuid
-from io import BytesIO
 
-from docx import Document as DocxDocument
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.core.config import settings
 
 
 client = TestClient(app)
@@ -16,22 +15,14 @@ DOCX_CONTENT_TYPE = (
 )
 
 
-def create_test_docx(content: str) -> bytes:
-    buffer = BytesIO()
-
-    document = DocxDocument()
-
-    document.add_paragraph(content)
-
-    document.save(buffer)
-
-    return buffer.getvalue()
+def create_test_file(content: str) -> bytes:
+    return content.encode("utf-8")
 
 
 def test_document_upload():
     unique_id = uuid.uuid4()
 
-    file_content = create_test_docx(
+    file_content = create_test_file(
         f"EKA integration test document {unique_id}"
     )
 
@@ -59,7 +50,7 @@ def test_document_upload():
 def test_duplicate_document_upload():
     unique_id = uuid.uuid4()
 
-    file_content = create_test_docx(
+    file_content = create_test_file(
         f"EKA duplicate detection test {unique_id}"
     )
 
@@ -95,6 +86,27 @@ def test_duplicate_document_upload():
     )
 
 
+def test_document_upload_rejects_oversized_file():
+    file_content = b"x" * (settings.max_file_size_mb * 1024 * 1024 + 1)
+
+    response = client.post(
+        "/documents/upload",
+        files={
+            "file": (
+                "oversized-document.pdf",
+                file_content,
+                "application/pdf",
+            )
+        },
+    )
+
+    assert response.status_code == 413
+    assert response.json()["detail"] == (
+        f"File size exceeds the maximum allowed size of "
+        f"{settings.max_file_size_mb} MB."
+    )
+
+
 def test_database_readiness():
     response = client.get("/health/ready")
 
@@ -105,3 +117,34 @@ def test_database_readiness():
     assert data["status"] == "ready"
     assert data["database"] == "connected"
     assert data["result"] == 1
+
+
+def test_document_read_and_list_api_return_safe_metadata():
+    unique_id = uuid.uuid4()
+    response = client.post(
+        "/documents/upload",
+        files={
+            "file": (
+                f"read-api-{unique_id}.docx",
+                create_test_file(f"Read API test {unique_id}"),
+                DOCX_CONTENT_TYPE,
+            )
+        },
+    )
+    assert response.status_code == 200
+    document_id = response.json()["id"]
+
+    fetched = client.get(f"/documents/{document_id}")
+    listed = client.get("/documents", params={"limit": 10, "offset": 0})
+
+    assert fetched.status_code == 200
+    assert fetched.json()["id"] == document_id
+    assert "storage_path" not in fetched.json()
+    assert listed.status_code == 200
+    assert any(item["id"] == document_id for item in listed.json()["documents"])
+    assert listed.json()["total"] >= 1
+
+
+def test_document_read_api_returns_not_found_for_unknown_id():
+    response = client.get(f"/documents/{uuid.uuid4()}")
+    assert response.status_code == 404

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DocumentResponse(BaseModel):
@@ -16,3 +16,10 @@ class DocumentResponse(BaseModel):
     version: int
     created_at: datetime
     updated_at: datetime
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentResponse]
+    total: int
+    limit: int = Field(ge=1, le=100)
+    offset: int = Field(ge=0)

@@ -1,3 +1,9 @@
+"""Document parsing retained for migration into Block 2.
+
+This module is intentionally not referenced by Block 1 upload or lifecycle
+code. Move it with the ingestion implementation when Block 2 is created.
+"""
+
 from io import BytesIO
 from pathlib import Path
 

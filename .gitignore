@@ -11,3 +11,8 @@ __pycache__/
 storage/
 
 *.log
+
+services/ml-service/models/*
+!services/ml-service/models/.gitkeep
+services/ml-service/datasets/*.csv
+data/datasets/csv-*.csv
