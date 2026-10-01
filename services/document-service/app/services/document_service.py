@@ -1,6 +1,6 @@
 import hashlib
-import hashlib
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -105,3 +105,9 @@ class DocumentService:
                 )
 
             raise
+
+    def get_document(self, document_id: uuid.UUID) -> Document | None:
+        return self.document_repository.get_by_id(document_id)
+
+    def list_documents(self, limit: int, offset: int) -> tuple[list[Document], int]:
+        return self.document_repository.list_documents(limit, offset)

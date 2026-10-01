@@ -36,6 +36,8 @@ def service_specs(repo: Path | None = None) -> list[ServiceSpec]:
         ServiceSpec("embedding", root / "services" / "embedding-service", 8002),
         ServiceSpec("rag", root / "services" / "rag-service", 8003),
         ServiceSpec("agent", root / "services" / "agent-service", 8004),
+        ServiceSpec("mcp", root / "services" / "mcp-service", 8005),
+        ServiceSpec("ml", root / "services" / "ml-service", 8006),
     ]
 
 
@@ -193,6 +195,8 @@ def main() -> int:
     print("Embedding : http://127.0.0.1:8002")
     print("RAG : http://127.0.0.1:8003")
     print("Agent     : http://127.0.0.1:8004")
+    print("MCP       : http://127.0.0.1:8005/mcp")
+    print("ML        : http://127.0.0.1:8006")
     print()
     print("Press Ctrl+C to stop all services.")
 

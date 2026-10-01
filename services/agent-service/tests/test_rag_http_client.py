@@ -1,8 +1,49 @@
 import json
 
 import httpx
+import pytest
 
 from app.tools.rag_tool import HttpRagClient
+from app.tools.mcp_client import MCPRagClient
+
+
+class FakeMCPToolClient:
+    def __init__(self, result):
+        self.result = result
+        self.calls = []
+
+    def call_tool(self, name, arguments):
+        self.calls.append((name, arguments))
+        if isinstance(self.result, Exception):
+            raise self.result
+        return self.result
+
+    def is_ready(self):
+        return True
+
+
+def test_mcp_rag_adapter_calls_search_tool_and_maps_result():
+    fake = FakeMCPToolClient({
+        "ok": True,
+        "data": {
+            "answer": "Policy answer",
+            "retrieved_chunks": 1,
+            "citations": [{"source": "policy.pdf", "document_id": "d1", "chunk_id": "c1", "score": 0.9}],
+        },
+    })
+    result = MCPRagClient(fake).search_knowledge("What is the policy?")
+
+    assert fake.calls == [("search_knowledge", {"query": "What is the policy?", "top_k": 5})]
+    assert result.answer == "Policy answer"
+    assert result.citations[0].chunk_id == "c1"
+
+
+def test_mcp_rag_adapter_maps_mcp_tool_errors_to_rag_port_error():
+    from app.tools.rag_tool import RagUnavailableError
+
+    client = MCPRagClient(FakeMCPToolClient({"ok": False, "error": {"code": "DOWN", "message": "unavailable"}}))
+    with pytest.raises(RagUnavailableError):
+        client.search_knowledge("question")
 
 
 def test_rag_http_adapter_uses_published_request_and_maps_citations():

@@ -1,5 +1,6 @@
 fastapi==0.141.1
 langgraph==1.2.12
+mcp==1.26.0
 pydantic==2.13.5
 pydantic-settings==2.15.0
 pytest==9.1.1

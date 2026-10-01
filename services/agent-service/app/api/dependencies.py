@@ -5,7 +5,7 @@ from app.agent.graph import build_agent_graph
 from app.config.settings import settings
 from app.infrastructure.llm.mock_provider import MockLLMProvider
 from app.tools.business_data_tool import LocalMockBusinessDataClient
-from app.tools.rag_tool import HttpRagClient
+from app.tools.mcp_client import MCPRagClient, StreamableHttpMCPClient
 
 
 @lru_cache(maxsize=1)
@@ -14,7 +14,7 @@ def get_agent_service() -> AgentService:
         raise ValueError("Only LLM_PROVIDER=mock is currently implemented.")
     retries = max(0, settings.max_agent_retries)
     graph = build_agent_graph(
-        rag_client=HttpRagClient(settings.rag_service_url),
+        rag_client=MCPRagClient(StreamableHttpMCPClient(settings.mcp_service_url)),
         business_data_client=LocalMockBusinessDataClient(),
         llm_provider=MockLLMProvider(),
         max_retries=retries,

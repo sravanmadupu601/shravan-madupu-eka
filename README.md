@@ -1,7 +1,7 @@
                         ## EKA Learning Platform
 
-                        EKA is a local-first enterprise AI learning platform. The current working
-                        services are `document-service`, `ingestion-service`, and `embedding-service`.
+                        EKA is a local-first enterprise AI learning platform. The implemented service set includes
+                        Document, Ingestion, Embedding, RAG, Agent, and MCP services.
 
                         ## START ALL SERVICES
 
@@ -18,12 +18,19 @@
                         Document Service  http://127.0.0.1:8000
                         Ingestion Service http://127.0.0.1:8001
                         Embedding Service http://127.0.0.1:8002
+                        RAG Service       http://127.0.0.1:8003
+                        Agent Service     http://127.0.0.1:8004
+                        MCP Service       http://127.0.0.1:8005/mcp
+                        ML Service        http://127.0.0.1:8006
+                        ML Service        http://127.0.0.1:8006
 
                         Swagger:
 
                         Document  http://127.0.0.1:8000/docs
                         Ingestion http://127.0.0.1:8001/docs
                         Embedding http://127.0.0.1:8002/docs
+                        RAG       http://127.0.0.1:8003/docs
+                        Agent     http://127.0.0.1:8004/docs
 
                         Individual startup commands:
 
@@ -35,6 +42,15 @@
 
                         cd services/embedding-service
                         uvicorn app.main:app --host 127.0.0.1 --port 8002
+
+                        cd services/mcp-service
+                        uvicorn app.main:app --host 127.0.0.1 --port 8005
+
+                        cd services/ml-service
+                        uvicorn app.main:app --host 127.0.0.1 --port 8006
+
+                        cd services/ml-service
+                        uvicorn app.main:app --host 127.0.0.1 --port 8006
 
                         Repository architecture and boundaries are documented in:
 

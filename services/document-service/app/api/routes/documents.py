@@ -5,11 +5,12 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
+from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.database import get_db
-from app.schemas.document import DocumentResponse
+from app.schemas.document import DocumentListResponse, DocumentResponse
 from app.services.document_service import DocumentService
 
 
@@ -17,6 +18,26 @@ router = APIRouter(
     prefix="/documents",
     tags=["Documents"],
 )
+
+
+@router.get("", response_model=DocumentListResponse)
+def list_documents(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    if not 1 <= limit <= 100 or offset < 0:
+        raise HTTPException(status_code=422, detail="limit must be 1..100 and offset must be non-negative.")
+    documents, total = DocumentService(db).list_documents(limit, offset)
+    return DocumentListResponse(documents=documents, total=total, limit=limit, offset=offset)
+
+
+@router.get("/{document_id}", response_model=DocumentResponse)
+def get_document(document_id: UUID, db: Session = Depends(get_db)):
+    document = DocumentService(db).get_document(document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    return document
 
 
 ALLOWED_CONTENT_TYPES = {

@@ -39,7 +39,7 @@ Intent analysis is a replaceable deterministic heuristic, not an ML classifier o
 
 ## Tools and integrations
 
-- **Knowledge:** `RagClient` is the boundary for Block 4. `HttpRagClient` calls the implemented local `POST /rag/query` contract (`question` request; `answer`, `citations`, and `retrieved_chunks` response) and uses `GET /health/ready` for readiness. Unit tests exercise request/response mapping with an in-memory HTTP transport; graph tests inject a fake client.
+- **Knowledge:** The graph keeps its `RagClient` domain port. The default `MCPRagClient` calls Block 6's official Streamable HTTP `search_knowledge` tool; Block 6 then calls Block 4 `POST /rag/query`. The direct `HttpRagClient` remains available for compatibility tests, but is no longer the default graph adapter.
 - **Documents:** `DocumentClient` is an interface with an explicit unavailable local adapter. Block 1 currently exposes upload and health/readiness only, not document retrieval/search, so Block 5 does not invent or call a nonexistent metadata/content endpoint.
 - **Business data:** `LocalMockBusinessDataClient` is a read-only demonstration adapter with a single sample reservation (`ABC123`). Its returned data is labeled `LOCAL MOCK DATA`; it is not live enterprise or Marriott data. Replace the adapter behind the port when a real local business API exists.
 - **Calculator:** omitted; current intents do not require arithmetic/date calculations.
@@ -63,6 +63,7 @@ Copy `.env.example` to `.env` if local overrides are needed. Defaults are local-
 
 ```dotenv
 AGENT_SERVICE_PORT=8004
+MCP_SERVICE_URL=http://127.0.0.1:8005/mcp
 RAG_SERVICE_URL=http://127.0.0.1:8003
 DOCUMENT_SERVICE_URL=http://127.0.0.1:8000
 MAX_AGENT_RETRIES=2
@@ -70,7 +71,7 @@ LLM_PROVIDER=mock
 ENVIRONMENT=development
 ```
 
-Only `LLM_PROVIDER=mock` is implemented. No API keys are required. The RAG URL is used by the HTTP adapter. The Document URL is retained for a future adapter; Block 1 currently has no document-read/search endpoint.
+Only `LLM_PROVIDER=mock` is implemented. No API keys are required. The MCP URL is used by the default knowledge adapter; the RAG URL remains available for the legacy direct HTTP adapter. The Document URL is retained for a future adapter; Block 1 currently has no document-read/search endpoint.
 
 ## Run on Windows
 

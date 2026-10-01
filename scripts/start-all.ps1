@@ -13,8 +13,10 @@ if (-not $preferredPython) {
         (Join-Path $repoRoot 'services/document-service/.venv/Scripts/python.exe'),
         (Join-Path $repoRoot 'services/ingestion-service/.venv/Scripts/python.exe'),
         (Join-Path $repoRoot 'services/embedding-service/.venv/Scripts/python.exe'),
-        (Join-Path $repoRoot 'services/rag-service/.venv/Scripts/python.exe')
-        (Join-Path $repoRoot 'services/agent-service/.venv/Scripts/python.exe')
+        (Join-Path $repoRoot 'services/rag-service/.venv/Scripts/python.exe'),
+        (Join-Path $repoRoot 'services/agent-service/.venv/Scripts/python.exe'),
+        (Join-Path $repoRoot 'services/mcp-service/.venv/Scripts/python.exe'),
+        (Join-Path $repoRoot 'services/ml-service/.venv/Scripts/python.exe')
     )
 
     foreach ($candidate in $candidates) {

@@ -117,3 +117,34 @@ def test_database_readiness():
     assert data["status"] == "ready"
     assert data["database"] == "connected"
     assert data["result"] == 1
+
+
+def test_document_read_and_list_api_return_safe_metadata():
+    unique_id = uuid.uuid4()
+    response = client.post(
+        "/documents/upload",
+        files={
+            "file": (
+                f"read-api-{unique_id}.docx",
+                create_test_file(f"Read API test {unique_id}"),
+                DOCX_CONTENT_TYPE,
+            )
+        },
+    )
+    assert response.status_code == 200
+    document_id = response.json()["id"]
+
+    fetched = client.get(f"/documents/{document_id}")
+    listed = client.get("/documents", params={"limit": 10, "offset": 0})
+
+    assert fetched.status_code == 200
+    assert fetched.json()["id"] == document_id
+    assert "storage_path" not in fetched.json()
+    assert listed.status_code == 200
+    assert any(item["id"] == document_id for item in listed.json()["documents"])
+    assert listed.json()["total"] >= 1
+
+
+def test_document_read_api_returns_not_found_for_unknown_id():
+    response = client.get(f"/documents/{uuid.uuid4()}")
+    assert response.status_code == 404

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from app.api.routes.agent import router as agent_router
 from app.config.settings import settings
-from app.tools.rag_tool import HttpRagClient
+from app.tools.mcp_client import StreamableHttpMCPClient
 
 app = FastAPI(title=settings.app_name, version=settings.app_version)
 app.include_router(agent_router)
@@ -15,12 +15,13 @@ def health() -> dict[str, str]:
 
 @app.get("/ready", tags=["Health"])
 def readiness() -> dict[str, object]:
-    rag_ready = HttpRagClient(settings.rag_service_url).is_ready()
+    mcp_ready = StreamableHttpMCPClient(settings.mcp_service_url).is_ready()
     return {
         "status": "ready",
         "agent_graph": "available",
         "llm_provider": settings.llm_provider,
-        "rag_integration": "available" if rag_ready else "unavailable",
+        "mcp_integration": "available" if mcp_ready else "unavailable",
+        "rag_integration": "through_mcp",
     }
 
 
@@ -40,6 +41,6 @@ def info() -> dict[str, object]:
             "generate_response",
         ],
         "features": ["deterministic_routing", "local_mock_business_data", "bounded_retries"],
-        "rag_api": "POST /rag/query",
+        "mcp_server": settings.mcp_service_url,
         "llm_provider": settings.llm_provider,
     }

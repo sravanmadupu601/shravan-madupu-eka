@@ -20,7 +20,7 @@ def test_health_readiness_and_info(api_client):
     assert api_client.get("/health").json() == {"status": "healthy"}
     ready = api_client.get("/ready")
     assert ready.status_code == 200
-    assert ready.json()["rag_integration"] in {"available", "unavailable"}
+    assert ready.json()["mcp_integration"] in {"available", "unavailable"}
     info = api_client.get("/info").json()
     assert info["port"] == 8004
     assert "validate_results" in info["graph_nodes"]
@@ -29,3 +29,8 @@ def test_health_readiness_and_info(api_client):
 def test_settings_reject_remote_service_urls():
     with pytest.raises(ValidationError):
         Settings(rag_service_url="https://example.com")
+
+
+def test_settings_require_mcp_transport_endpoint():
+    with pytest.raises(ValidationError):
+        Settings(mcp_service_url="http://127.0.0.1:8005")
